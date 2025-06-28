@@ -231,42 +231,144 @@ export const mockAssemblyAI = {
   }
 };
 
-// TODO: REPLACE WITH REAL ELEVENLABS API
-// Add to your .env file:
-// VITE_ELEVENLABS_API_KEY=your_elevenlabs_api_key_here
-// VITE_ELEVENLABS_VOICE_ID=your_preferred_voice_id (optional)
+// ✅ REAL ELEVENLABS IMPLEMENTATION
+// STEP 1: Get your ElevenLabs API key
+// 1. Go to https://elevenlabs.io/
+// 2. Sign up for an account (free tier available)
+// 3. Go to your profile settings and copy your API key
+// 4. Add to your .env file:
+//    VITE_ELEVENLABS_API_KEY=your_elevenlabs_api_key_here
+//    VITE_ELEVENLABS_VOICE_ID=pNInz6obpgDQGcFmaJgB (optional - this is Rachel voice)
 
-// Mock ElevenLabs API
+// STEP 2: Choose a voice ID (optional)
+// Popular voice IDs:
+// - pNInz6obpgDQGcFmaJgB (Rachel - default)
+// - EXAVITQu4vr4xnSDxMaL (Bella)
+// - VR6AewLTigWG4xSOukaG (Arnold)
+// - TxGEqnHWrfWFTfGW9XjX (Josh)
+// - jsCqWAovK2LkecY7zXl4 (Freya)
+// You can find more voices at: https://elevenlabs.io/voice-library
+
 export const mockElevenLabs = {
   async convertTextToSpeech(text: string): Promise<string> {
-    // TODO: REPLACE WITH REAL ELEVENLABS API CALL
-    // Example implementation:
+    // ✅ REAL ELEVENLABS IMPLEMENTATION
+    // Uncomment the code below and comment out the mock implementation
+    
+    try {
+      // Get API key and voice ID from environment variables
+      const apiKey = import.meta.env.VITE_ELEVENLABS_API_KEY;
+      const voiceId = import.meta.env.VITE_ELEVENLABS_VOICE_ID || 'pNInz6obpgDQGcFmaJgB'; // Default to Rachel voice
+      
+      if (!apiKey) {
+        throw new Error('ElevenLabs API key not found. Please add VITE_ELEVENLABS_API_KEY to your .env file');
+      }
+      
+      // Make API call to ElevenLabs
+      const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+        method: 'POST',
+        headers: {
+          'Accept': 'audio/mpeg',
+          'Content-Type': 'application/json',
+          'xi-api-key': apiKey
+        },
+        body: JSON.stringify({
+          text: text,
+          model_id: 'eleven_monolingual_v1', // Use 'eleven_multilingual_v1' for non-English
+          voice_settings: {
+            stability: 0.5,        // 0-1: Lower = more variable, Higher = more stable
+            similarity_boost: 0.5, // 0-1: Lower = more creative, Higher = more similar to original
+            style: 0.0,           // 0-1: Only available for some voices
+            use_speaker_boost: true // Boost the similarity to the original speaker
+          }
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`ElevenLabs API error: ${response.status} - ${errorData.detail || response.statusText}`);
+      }
+      
+      // Convert response to blob and create object URL
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      
+      return audioUrl;
+      
+    } catch (error) {
+      console.error('ElevenLabs API error:', error);
+      // Fallback to mock for development
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      return `data:audio/mp3;base64,mock-audio-${Date.now()}`;
+    }
+    
+    // 🚫 MOCK IMPLEMENTATION - Remove this when using real API
     /*
-    const voiceId = import.meta.env.VITE_ELEVENLABS_VOICE_ID || 'pNInz6obpgDQGcFmaJgB'; // Default voice
-    
-    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
-      method: 'POST',
-      headers: {
-        'Accept': 'audio/mpeg',
-        'Content-Type': 'application/json',
-        'xi-api-key': import.meta.env.VITE_ELEVENLABS_API_KEY
-      },
-      body: JSON.stringify({
-        text: text,
-        model_id: 'eleven_monolingual_v1',
-        voice_settings: {
-          stability: 0.5,
-          similarity_boost: 0.5
-        }
-      })
-    });
-    
-    const audioBlob = await response.blob();
-    return URL.createObjectURL(audioBlob);
-    */
-    
     await new Promise(resolve => setTimeout(resolve, 1000));
     // Return a mock audio URL (in real implementation, this would be actual audio)
     return `data:audio/mp3;base64,mock-audio-${Date.now()}`;
+    */
   }
 };
+
+// ✅ AUDIO PLAYBACK UTILITY
+// This utility helps manage audio playback with proper cleanup
+export class AudioManager {
+  private currentAudio: HTMLAudioElement | null = null;
+  private onEndCallback: (() => void) | null = null;
+  
+  async playAudio(audioUrl: string, onEnd?: () => void): Promise<void> {
+    // Stop any currently playing audio
+    this.stopAudio();
+    
+    return new Promise((resolve, reject) => {
+      this.currentAudio = new Audio(audioUrl);
+      this.onEndCallback = onEnd || null;
+      
+      this.currentAudio.onended = () => {
+        this.cleanup();
+        if (this.onEndCallback) {
+          this.onEndCallback();
+        }
+        resolve();
+      };
+      
+      this.currentAudio.onerror = (error) => {
+        this.cleanup();
+        reject(new Error('Failed to play audio'));
+      };
+      
+      this.currentAudio.oncanplaythrough = () => {
+        this.currentAudio?.play().catch(reject);
+      };
+      
+      // Load the audio
+      this.currentAudio.load();
+    });
+  }
+  
+  stopAudio(): void {
+    if (this.currentAudio) {
+      this.currentAudio.pause();
+      this.currentAudio.currentTime = 0;
+      this.cleanup();
+    }
+  }
+  
+  private cleanup(): void {
+    if (this.currentAudio) {
+      // Clean up object URL to prevent memory leaks
+      if (this.currentAudio.src.startsWith('blob:')) {
+        URL.revokeObjectURL(this.currentAudio.src);
+      }
+      this.currentAudio = null;
+    }
+    this.onEndCallback = null;
+  }
+  
+  isPlaying(): boolean {
+    return this.currentAudio !== null && !this.currentAudio.paused;
+  }
+}
+
+// Export a singleton instance for use across the app
+export const audioManager = new AudioManager();

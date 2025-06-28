@@ -5,7 +5,7 @@ import { UploadedDocument, StudySession as StudySessionType, StudyPhase, AIAssis
 import { AIAssistant } from './AIAssistant';
 import { RecordingInterface } from './RecordingInterface';
 import { PerformanceSummary } from './PerformanceSummary';
-import { mockGPTAPI, mockAssemblyAI, mockElevenLabs } from '../../utils/mockApis';
+import { mockGPTAPI, mockAssemblyAI, mockElevenLabs, audioManager } from '../../utils/mockApis';
 import { storage } from '../../utils/localStorage';
 
 interface StudySessionProps {
@@ -160,39 +160,40 @@ export const StudySession: React.FC<StudySessionProps> = ({
     setSession(finalSession);
   };
 
+  // ✅ REAL ELEVENLABS IMPLEMENTATION
   const playQuestion = async () => {
     if (!aiState.currentQuestion) return;
     
     setAiState(prev => ({ ...prev, isPlaying: true }));
     
     try {
-      // TODO: REPLACE WITH REAL ELEVENLABS API CALL
-      // The mockElevenLabs.convertTextToSpeech call should be replaced with real ElevenLabs integration
+      // Get audio URL from ElevenLabs API
       const audioUrl = await mockElevenLabs.convertTextToSpeech(aiState.currentQuestion);
       
-      // TODO: REPLACE WITH REAL AUDIO PLAYBACK
-      // In a real implementation, you would play the actual audio:
-      /*
-      const audio = new Audio(audioUrl);
-      audio.onended = () => {
+      // ✅ REAL AUDIO PLAYBACK IMPLEMENTATION
+      // Use the AudioManager to play the audio with proper cleanup
+      await audioManager.playAudio(audioUrl, () => {
+        // This callback is called when audio finishes playing
         setAiState(prev => ({ ...prev, isPlaying: false }));
-      };
-      audio.play();
-      */
+      });
       
-      // Mock audio playback duration
-      setTimeout(() => {
-        setAiState(prev => ({ ...prev, isPlaying: false }));
-      }, 3000);
+      // Note: The audio will start playing immediately, and the callback above
+      // will be called when it finishes. If there's an error, it will be caught below.
+      
     } catch (error) {
       console.error('Error playing audio:', error);
       setAiState(prev => ({ ...prev, isPlaying: false }));
+      
+      // Optional: Show user-friendly error message
+      // You could add a toast notification here to inform the user
+      alert('Failed to play audio. Please check your internet connection and try again.');
     }
   };
 
+  // ✅ REAL AUDIO STOPPING IMPLEMENTATION
   const stopAudio = () => {
-    // TODO: IMPLEMENT REAL AUDIO STOPPING
-    // In a real implementation, you would stop the actual audio playback
+    // Stop the currently playing audio using AudioManager
+    audioManager.stopAudio();
     setAiState(prev => ({ ...prev, isPlaying: false }));
   };
 
@@ -217,6 +218,9 @@ export const StudySession: React.FC<StudySessionProps> = ({
   };
 
   const resetSession = () => {
+    // Stop any playing audio when resetting
+    audioManager.stopAudio();
+    
     setPhase('explain');
     setCurrentTranscript('');
     setFullExplanation('');
@@ -231,6 +235,13 @@ export const StudySession: React.FC<StudySessionProps> = ({
       passCount: 0
     });
   };
+
+  // Cleanup audio when component unmounts
+  useEffect(() => {
+    return () => {
+      audioManager.stopAudio();
+    };
+  }, []);
 
   const getPhaseTitle = () => {
     switch (phase) {
