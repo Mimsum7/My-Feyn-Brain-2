@@ -257,8 +257,6 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({ onDocumentProces
           <div className="text-xs text-slate-500">
             <p>Supported formats: PDF, DOCX, TXT</p>
             <p>Maximum file size: 10MB</p>
-            <p className="mt-2 text-green-600">✅ TXT files: Fully supported</p>
-            <p className="text-amber-600">⚠️ PDF/DOCX: Install additional libraries (see comments in code)</p>
           </div>
         </div>
       </motion.div>
