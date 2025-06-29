@@ -1,153 +1,129 @@
-# ElevenLabs Voice AI Setup Guide
+# ElevenLabs API Integration
 
-This guide will help you implement real ElevenLabs text-to-speech functionality in your Feyn Brain application.
+This document explains how to set up and use the ElevenLabs API integration for text-to-speech functionality in the Feyn Brain application.
 
-## Step 1: Get Your ElevenLabs API Key
+## Setup
 
-1. **Sign up for ElevenLabs**
-   - Go to [https://elevenlabs.io/](https://elevenlabs.io/)
-   - Create a free account (includes 10,000 characters per month)
-   - For more usage, consider upgrading to a paid plan
+### 1. Get ElevenLabs API Key
 
-2. **Get Your API Key**
-   - Log into your ElevenLabs account
-   - Go to your [Profile Settings](https://elevenlabs.io/profile)
-   - Copy your API key from the "API Key" section
+1. Visit [ElevenLabs](https://elevenlabs.io/)
+2. Sign up for an account
+3. Navigate to your profile settings
+4. Copy your API key
 
-3. **Add to Environment Variables**
-   - Create a `.env` file in your project root (if it doesn't exist)
-   - Add your API key:
-   ```env
-   VITE_ELEVENLABS_API_KEY=your_api_key_here
-   ```
+### 2. Configure Environment Variables
 
-## Step 2: Choose a Voice (Optional)
+Create a `.env` file in your project root (if it doesn't exist) and add:
 
-ElevenLabs offers many high-quality voices. Here are some popular options:
-
-### Free Voices (Available on all plans):
-- `pNInz6obpgDQGcFmaJgB` - **Rachel** (default, clear female voice)
-- `EXAVITQu4vr4xnSDxMaL` - **Bella** (warm female voice)
-- `VR6AewLTigWG4xSOukaG` - **Arnold** (deep male voice)
-- `TxGEqnHWrfWFTfGW9XjX` - **Josh** (young male voice)
-
-### Premium Voices (Require paid subscription):
-- `jsCqWAovK2LkecY7zXl4` - **Freya** (British female voice)
-- `21m00Tcm4TlvDq8ikWAM` - **Rachel** (alternative version)
-- `AZnzlk1XvdvUeBnXmlld` - **Domi** (confident female voice)
-- `CYw3kZ02Hs0563khs1Fj` - **Dave** (conversational male voice)
-
-Add your chosen voice to your `.env` file:
 ```env
+VITE_ELEVENLABS_API_KEY=your_elevenlabs_api_key_here
 VITE_ELEVENLABS_VOICE_ID=pNInz6obpgDQGcFmaJgB
 ```
 
-If you don't specify a voice ID, it will default to Rachel.
+**Note:** The `VITE_ELEVENLABS_VOICE_ID` is optional. If not provided, the application will use the default voice ID `pNInz6obpgDQGcFmaJgB`.
 
-## Step 3: Enable the Real Implementation
+### 3. Choose a Voice (Optional)
 
-The code is already set up to use the real ElevenLabs API! Here's what's already implemented:
+You can customize the voice used for text-to-speech:
 
-### In `src/utils/mockApis.ts`:
-- Real API call to ElevenLabs text-to-speech endpoint
-- Proper error handling and fallback to mock
-- Audio blob creation and URL generation
-- Configurable voice settings
+1. Visit the [ElevenLabs Voice Library](https://elevenlabs.io/voice-library)
+2. Browse available voices
+3. Copy the voice ID from the URL or voice details
+4. Add it to your `.env` file as `VITE_ELEVENLABS_VOICE_ID`
 
-### In `src/components/Study/StudySession.tsx`:
-- Real audio playback using the AudioManager
-- Proper cleanup of audio resources
-- Error handling for failed audio playback
+## Implementation Details
 
-## Step 4: Test the Implementation
+### Files Modified
 
-1. **Start your development server:**
-   ```bash
-   npm run dev
-   ```
+- `src/utils/elevenLabsApi.ts` - New file containing the ElevenLabs API integration
+- `src/components/Study/StudySession.tsx` - Updated to use real ElevenLabs API instead of mock
+- `src/utils/mockApis.ts` - Removed ElevenLabs mock implementation
 
-2. **Upload a document and start a study session**
+### Key Features
 
-3. **When you reach the questions phase:**
-   - Click the "Play" button next to a question
-   - You should hear the AI voice reading the question aloud
-   - The voice will be generated using ElevenLabs API
+1. **Real-time Text-to-Speech**: Converts AI-generated questions to natural-sounding speech
+2. **Audio Playback Management**: Proper cleanup of audio resources to prevent memory leaks
+3. **Error Handling**: Graceful error handling with user-friendly messages
+4. **Voice Customization**: Support for different ElevenLabs voices
+5. **TypeScript Support**: Fully typed implementation
 
-## Step 5: Customize Voice Settings (Optional)
+### API Methods
 
-You can customize the voice characteristics by modifying the `voice_settings` in `src/utils/mockApis.ts`:
+The `ElevenLabsAPI` class provides the following methods:
 
-```javascript
-voice_settings: {
-  stability: 0.5,        // 0-1: Lower = more variable, Higher = more stable
-  similarity_boost: 0.5, // 0-1: Lower = more creative, Higher = more similar
-  style: 0.0,           // 0-1: Only available for some voices
-  use_speaker_boost: true // Boost similarity to original speaker
-}
-```
+- `convertTextToSpeech(text: string): Promise<string>` - Converts text to speech and returns audio URL
+- `getAvailableVoices(): Promise<any[]>` - Fetches available voices from ElevenLabs
+- `getVoiceDetails(voiceId: string): Promise<any>` - Gets details for a specific voice
 
-### Voice Settings Explained:
-- **Stability (0-1)**: Controls how consistent the voice sounds
-  - Lower values (0.1-0.3): More expressive and variable
-  - Higher values (0.7-0.9): More stable and consistent
-  
-- **Similarity Boost (0-1)**: Controls how similar the output is to the original voice
-  - Lower values (0.1-0.3): More creative interpretation
-  - Higher values (0.7-0.9): Closer to the original voice sample
-  
-- **Style (0-1)**: Available for some voices, controls speaking style
-- **Speaker Boost**: Enhances similarity to the original speaker
+### Usage in StudySession
 
-## Step 6: Monitor Usage
+The text-to-speech functionality is automatically triggered when:
 
-- Check your usage at [https://elevenlabs.io/usage](https://elevenlabs.io/usage)
-- Free tier includes 10,000 characters per month
-- Each question typically uses 50-200 characters
-- Consider upgrading if you need more usage
+1. A user reaches the questions phase of their study session
+2. The AI assistant plays a question aloud
+3. The user clicks the play button in the AI assistant interface
+
+## Error Handling
+
+The integration includes comprehensive error handling:
+
+- **Missing API Key**: Shows alert asking user to configure the API key
+- **Network Errors**: Logs errors and shows user-friendly messages
+- **Audio Playback Errors**: Handles audio loading and playback failures
+- **Resource Cleanup**: Automatically cleans up audio URLs to prevent memory leaks
+
+## Testing
+
+To test the integration:
+
+1. Ensure your `.env` file has the correct API key
+2. Start the development server: `npm run dev`
+3. Upload a document and start a study session
+4. Reach the questions phase
+5. Click the play button to hear the AI-generated questions
 
 ## Troubleshooting
 
-### Common Issues:
+### Common Issues
 
-1. **"API key not found" error**
-   - Make sure your `.env` file is in the project root
-   - Restart your development server after adding the API key
-   - Check that the key starts with `VITE_`
+1. **"ElevenLabs API key not configured"**
+   - Check that `VITE_ELEVENLABS_API_KEY` is set in your `.env` file
+   - Ensure the `.env` file is in the project root directory
 
-2. **"Failed to play audio" error**
+2. **"Failed to play audio"**
+   - Verify your ElevenLabs API key is valid
    - Check your internet connection
-   - Verify your API key is correct
-   - Check the browser console for detailed error messages
+   - Ensure you have sufficient ElevenLabs credits
 
-3. **No sound playing**
-   - Check your browser's audio settings
-   - Make sure your device volume is up
-   - Some browsers require user interaction before playing audio
+3. **Audio not playing**
+   - Check browser console for errors
+   - Ensure your browser supports audio playback
+   - Try refreshing the page
 
-4. **Voice sounds different than expected**
-   - Try different voice IDs from the list above
-   - Adjust the voice settings (stability, similarity_boost)
-   - Some voices may require a paid subscription
+### Debug Mode
 
-### Browser Compatibility:
-- Chrome: Full support
-- Firefox: Full support
-- Safari: Full support
-- Edge: Full support
+To enable debug logging, add this to your browser console:
 
-## Cost Optimization Tips
+```javascript
+localStorage.setItem('debug', 'elevenlabs');
+```
 
-1. **Use shorter questions**: The AI generates concise questions to minimize character usage
-2. **Cache audio**: Consider implementing audio caching for repeated questions
-3. **Monitor usage**: Keep track of your monthly character usage
-4. **Choose appropriate voice**: Some premium voices may cost more
+## API Limits
 
-## Next Steps
+Be aware of ElevenLabs API limits:
 
-Once ElevenLabs is working, you might want to:
-1. Implement OpenAI for better AI analysis
-2. Add AssemblyAI for real speech transcription
-3. Add voice selection in the UI
-4. Implement audio caching for better performance
+- **Free Tier**: Limited characters per month
+- **Paid Tiers**: Higher limits based on subscription
+- **Rate Limiting**: API calls are rate-limited
 
-The application is designed to gracefully fall back to mock implementations if any API is unavailable, so you can implement these services incrementally.
+Monitor your usage in the ElevenLabs dashboard to avoid hitting limits during development.
+
+## Future Enhancements
+
+Potential improvements for the ElevenLabs integration:
+
+1. **Voice Selection UI**: Allow users to choose voices from the application
+2. **Audio Speed Control**: Adjust playback speed
+3. **Offline Caching**: Cache frequently used audio
+4. **Multiple Languages**: Support for different languages
+5. **Custom Voice Training**: Integration with custom voice training features 

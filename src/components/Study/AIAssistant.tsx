@@ -10,6 +10,7 @@ interface AIAssistantProps {
   onPlayAudio: () => void;
   onStopAudio: () => void;
   onPass: () => void;
+  hasBeenPlayed?: boolean;
 }
 
 export const AIAssistant: React.FC<AIAssistantProps> = ({
@@ -18,7 +19,8 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
   onStopListening,
   onPlayAudio,
   onStopAudio,
-  onPass
+  onPass,
+  hasBeenPlayed = false
 }) => {
   const pulseVariants = {
     idle: {
@@ -72,15 +74,15 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
   const Icon = getIcon();
 
   return (
-    <div className="fixed bottom-8 right-8 z-50">
-      <div className="flex flex-col items-end space-y-4">
+    <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50">
+      <div className="flex flex-col items-center space-y-4">
         {/* Current Question Display */}
         {state.currentQuestion && (
           <motion.div
-            initial={{ opacity: 0, x: 100 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 100 }}
-            className="max-w-sm p-4 bg-white rounded-lg shadow-lg border border-periwinkle-200 mr-4"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="max-w-sm p-4 bg-white rounded-lg shadow-lg border border-periwinkle-200"
           >
             <p className="text-sm font-medium text-slate-800 mb-3">{state.currentQuestion}</p>
             <div className="flex items-center justify-between">
@@ -90,7 +92,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
                   disabled={state.isPlaying}
                   className="px-3 py-1 bg-periwinkle-100 text-periwinkle-700 rounded text-xs font-medium hover:bg-periwinkle-200 disabled:opacity-50 transition-colors"
                 >
-                  {state.isPlaying ? 'Playing...' : 'Play'}
+                  {state.isPlaying ? 'Playing...' : hasBeenPlayed ? 'Repeat' : 'Play'}
                 </button>
                 {state.isPlaying && (
                   <button
@@ -103,10 +105,9 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
               </div>
               <button
                 onClick={onPass}
-                disabled={state.passCount >= 3}
-                className="px-3 py-1 bg-gray-100 text-gray-700 rounded text-xs font-medium hover:bg-gray-200 disabled:opacity-50 transition-colors"
+                className="px-3 py-1 bg-gray-100 text-gray-700 rounded text-xs font-medium hover:bg-gray-200 transition-colors"
               >
-                Pass ({state.passCount}/3)
+                Pass
               </button>
             </div>
           </motion.div>
@@ -134,7 +135,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="text-center mr-2"
+          className="text-center"
         >
           <p className="text-xs font-medium text-slate-700">
             {state.isPlaying

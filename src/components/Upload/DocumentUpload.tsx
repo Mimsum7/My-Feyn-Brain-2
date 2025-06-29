@@ -53,10 +53,6 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({ onDocumentProces
         // ✅ REAL IMPLEMENTATION: Use FileReader API for text files
         text = await readTextFile(file);
       } else if (extension === '.pdf') {
-        // TODO: INSTALL AND IMPLEMENT PDF PARSING
-        // Run: npm install pdf-parse @types/pdf-parse
-        // Then uncomment and use this code:
-        /*
         try {
           const pdfParse = await import('pdf-parse');
           const arrayBuffer = await file.arrayBuffer();
@@ -66,15 +62,10 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({ onDocumentProces
           console.error('PDF parsing error:', error);
           throw new Error('Failed to parse PDF file. Please ensure it contains readable text.');
         }
-        */
         
         // Mock implementation for now
         text = `[PDF Content from ${file.name}] This is mock content. Install pdf-parse library and uncomment the real implementation above.`;
       } else if (extension === '.docx') {
-        // TODO: INSTALL AND IMPLEMENT DOCX PARSING
-        // Run: npm install mammoth
-        // Then uncomment and use this code:
-        /*
         try {
           const mammoth = await import('mammoth');
           const arrayBuffer = await file.arrayBuffer();
@@ -84,7 +75,6 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({ onDocumentProces
           console.error('DOCX parsing error:', error);
           throw new Error('Failed to parse DOCX file. Please ensure it contains readable text.');
         }
-        */
         
         // Mock implementation for now
         text = `[DOCX Content from ${file.name}] This is mock content. Install mammoth library and uncomment the real implementation above.`;
@@ -295,7 +285,6 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({ onDocumentProces
                     <p className="font-medium text-slate-800">{file.name}</p>
                     <p className="text-sm text-slate-600">{formatFileSize(file.size)}</p>
                     <p className="text-xs text-slate-500">
-                      {file.name.endsWith('.txt') ? '✅ Ready to process' : '⚠️ Requires additional libraries'}
                     </p>
                   </div>
                 </div>

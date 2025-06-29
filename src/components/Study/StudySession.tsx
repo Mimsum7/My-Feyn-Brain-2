@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FileText, RotateCcw } from 'lucide-react';
 import { UploadedDocument, StudySession as StudySessionType, StudyPhase, AIAssistantState } from '../../types';
 import { AIAssistant } from './AIAssistant';
 import { RecordingInterface } from './RecordingInterface';
 import { PerformanceSummary } from './PerformanceSummary';
-import { mockGPTAPI, mockAssemblyAI, mockElevenLabs, audioManager } from '../../utils/mockApis';
+import { mockGPTAPI, mockAssemblyAI } from '../../utils/mockApis';
+import { elevenLabsAPI } from '../../utils/elevenLabsApi';
 import { storage } from '../../utils/localStorage';
 
 interface StudySessionProps {
@@ -32,6 +33,7 @@ export const StudySession: React.FC<StudySessionProps> = ({
     currentQuestion: '',
     passCount: 0
   });
+  const [hasQuestionBeenPlayed, setHasQuestionBeenPlayed] = useState(false);
   const [session, setSession] = useState<StudySessionType>({
     sessionID: Date.now().toString(),
     timestamp: Date.now(),
@@ -49,6 +51,10 @@ export const StudySession: React.FC<StudySessionProps> = ({
     },
     documentTitle: document.name
   });
+
+  // Audio playback refs
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const currentAudioUrl = useRef<string | null>(null);
 
   // TODO: REPLACE WITH REAL TRANSCRIPTION SERVICE
   // These variables will hold the real transcription service instances
@@ -109,6 +115,7 @@ export const StudySession: React.FC<StudySessionProps> = ({
             currentQuestion: aiQuestions[currentQuestionIndex + 1],
             passCount: 0
           }));
+          setHasQuestionBeenPlayed(false);
         } else {
           // All questions answered, move to summary
           setPhase('summary');
@@ -143,6 +150,7 @@ export const StudySession: React.FC<StudySessionProps> = ({
         currentQuestion: questions[0],
         passCount: 0
       }));
+      setHasQuestionBeenPlayed(false); // Reset for first question
     } catch (error) {
       console.error('Error processing explanation:', error);
       setAiState(prev => ({ ...prev, isProcessing: false }));
@@ -160,73 +168,91 @@ export const StudySession: React.FC<StudySessionProps> = ({
     setSession(finalSession);
   };
 
-  // ✅ REAL ELEVENLABS IMPLEMENTATION
   const playQuestion = async () => {
     if (!aiState.currentQuestion) return;
     
     setAiState(prev => ({ ...prev, isPlaying: true }));
     
     try {
-      // Get audio URL from ElevenLabs API
-      const audioUrl = await mockElevenLabs.convertTextToSpeech(aiState.currentQuestion);
+      // Use real ElevenLabs API
+      const audioUrl = await elevenLabsAPI.convertTextToSpeech(aiState.currentQuestion);
       
-      // ✅ REAL AUDIO PLAYBACK IMPLEMENTATION
-      // Use the AudioManager to play the audio with proper cleanup
-      await audioManager.playAudio(audioUrl, () => {
-        // This callback is called when audio finishes playing
+      // Clean up previous audio if exists
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+      if (currentAudioUrl.current) {
+        URL.revokeObjectURL(currentAudioUrl.current);
+      }
+      
+      // Create new audio element
+      const audio = new Audio(audioUrl);
+      audioRef.current = audio;
+      currentAudioUrl.current = audioUrl;
+      
+      audio.onended = () => {
         setAiState(prev => ({ ...prev, isPlaying: false }));
-      });
+        audioRef.current = null;
+      };
       
-      // Note: The audio will start playing immediately, and the callback above
-      // will be called when it finishes. If there's an error, it will be caught below.
+      audio.onerror = (error) => {
+        console.error('Audio playback error:', error);
+        setAiState(prev => ({ ...prev, isPlaying: false }));
+        audioRef.current = null;
+      };
       
+      await audio.play();
     } catch (error) {
       console.error('Error playing audio:', error);
       setAiState(prev => ({ ...prev, isPlaying: false }));
       
-      // Optional: Show user-friendly error message
-      // You could add a toast notification here to inform the user
-      alert('Failed to play audio. Please check your internet connection and try again.');
-    }
-  };
-
-  // ✅ REAL AUDIO STOPPING IMPLEMENTATION
-  const stopAudio = () => {
-    // Stop the currently playing audio using AudioManager
-    audioManager.stopAudio();
-    setAiState(prev => ({ ...prev, isPlaying: false }));
-  };
-
-  const handlePass = () => {
-    const newPassCount = aiState.passCount + 1;
-    setAiState(prev => ({ ...prev, passCount: newPassCount }));
-    
-    if (newPassCount >= 3) {
-      // Move to next question or summary
-      if (currentQuestionIndex < aiQuestions.length - 1) {
-        setCurrentQuestionIndex(prev => prev + 1);
-        setAiState(prev => ({ 
-          ...prev, 
-          currentQuestion: aiQuestions[currentQuestionIndex + 1],
-          passCount: 0
-        }));
+      // Show user-friendly error message
+      if (error instanceof Error && error.message.includes('VITE_ELEVENLABS_API_KEY')) {
+        alert('ElevenLabs API key not configured. Please add VITE_ELEVENLABS_API_KEY to your .env file.');
       } else {
-        setPhase('summary');
-        generateFinalSummary(userResponses);
+        alert('Failed to play audio. Please check your ElevenLabs API key and try again.');
       }
     }
   };
 
+  const stopAudio = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+    if (currentAudioUrl.current) {
+      URL.revokeObjectURL(currentAudioUrl.current);
+      currentAudioUrl.current = null;
+    }
+    setAiState(prev => ({ ...prev, isPlaying: false }));
+  };
+
+  const handlePass = () => {
+    // Move to next question immediately on pass
+    if (currentQuestionIndex < aiQuestions.length - 1) {
+      setCurrentQuestionIndex(prev => prev + 1);
+      setAiState(prev => ({ 
+        ...prev, 
+        currentQuestion: aiQuestions[currentQuestionIndex + 1],
+        passCount: 0 // Reset pass count for new question
+      }));
+      setHasQuestionBeenPlayed(false); // Reset for new question
+    } else {
+      // No more questions available, end session
+      setPhase('summary');
+      generateFinalSummary(userResponses);
+    }
+  };
+
   const resetSession = () => {
-    // Stop any playing audio when resetting
-    audioManager.stopAudio();
-    
     setPhase('explain');
     setCurrentTranscript('');
     setFullExplanation('');
     setAiQuestions([]);
     setCurrentQuestionIndex(0);
     setUserResponses([]);
+    setHasQuestionBeenPlayed(false);
     setAiState({
       isListening: false,
       isProcessing: false,
@@ -235,13 +261,6 @@ export const StudySession: React.FC<StudySessionProps> = ({
       passCount: 0
     });
   };
-
-  // Cleanup audio when component unmounts
-  useEffect(() => {
-    return () => {
-      audioManager.stopAudio();
-    };
-  }, []);
 
   const getPhaseTitle = () => {
     switch (phase) {
@@ -268,6 +287,31 @@ export const StudySession: React.FC<StudySessionProps> = ({
         return '';
     }
   };
+
+  // Auto-play question when it changes
+  useEffect(() => {
+    if (phase === 'questions' && aiState.currentQuestion && !hasQuestionBeenPlayed) {
+      // Small delay to ensure the question is set before playing
+      const timer = setTimeout(() => {
+        playQuestion();
+        setHasQuestionBeenPlayed(true);
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [aiState.currentQuestion, phase, hasQuestionBeenPlayed]);
+
+  // Cleanup audio on component unmount
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      if (currentAudioUrl.current) {
+        URL.revokeObjectURL(currentAudioUrl.current);
+      }
+    };
+  }, []);
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -412,6 +456,7 @@ export const StudySession: React.FC<StudySessionProps> = ({
           onPlayAudio={playQuestion}
           onStopAudio={stopAudio}
           onPass={handlePass}
+          hasBeenPlayed={hasQuestionBeenPlayed}
         />
       )}
     </div>
