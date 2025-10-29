@@ -43,9 +43,8 @@ cp .env.example .env
 
 4. Edit the `.env` file and add your API keys:
 ```env
-VITE_OPENAI_API_KEY=your_openai_api_key_here
-VITE_OPENAI_MODEL=gpt-4
-VITE_ASSEMBLYAI_API_KEY=your_assemblyai_api_key_here
+GROQ_API_KEY=your_groq_api_key_here
+VITE_GROQ_API_KEY=your_groq_api_key_here
 VITE_ELEVENLABS_API_KEY=your_elevenlabs_api_key_here
 VITE_ELEVENLABS_VOICE_ID=pNInz6obpgDQGcFmaJgB
 ```
