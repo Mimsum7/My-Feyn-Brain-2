@@ -4,7 +4,7 @@ A modern web application that helps you master any subject using the Feynman tec
 
 ## Features
 
-- **Document Upload**: Support for PDF, DOCX, and TXT files
+- **Document Upload**: Support for DOCX and TXT files
 - **AI-Powered Analysis**: Automatic concept extraction and summary generation
 - **Voice Recording**: Real-time transcription of your explanations
 - **Intelligent Questioning**: AI-generated follow-up questions to deepen understanding
@@ -52,7 +52,7 @@ VITE_ELEVENLABS_VOICE_ID=pNInz6obpgDQGcFmaJgB
 
 5. Install additional dependencies for file processing:
 ```bash
-npm install pdf-parse mammoth
+npm install mammoth
 ```
 
 ### API Integration Setup
@@ -77,7 +77,7 @@ The application currently uses mock APIs for development. To integrate with real
 
 #### 4. File Processing
 - Replace mock file processing in `src/components/Upload/DocumentUpload.tsx`
-- Implement real PDF, DOCX, and TXT parsing
+- Implement real DOCX and TXT parsing
 
 ### Development
 

@@ -7,6 +7,7 @@ import { SessionHistory } from './components/History/SessionHistory';
 import { AnalyticsDashboard } from './components/Analytics/AnalyticsDashboard';
 import { UploadedDocument, StudySession as StudySessionType } from './types';
 import { storage } from './utils/localStorage';
+// import { TestTranscription } from "./components/TestTranscription";
 
 function App() {
   const [currentView, setCurrentView] = useState<string>('upload');
@@ -115,20 +116,12 @@ function App() {
       />
       
       <main className="flex-1 overflow-auto">
-        <div className="p-8">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentView}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-            >
-              {renderCurrentView()}
-            </motion.div>
-          </AnimatePresence>
-        </div>
-      </main>
+  <div className="p-8">
+    {renderCurrentView()}
+    {/* <TestTranscription /> */}
+  </div>
+</main>
+
     </div>
   );
 }

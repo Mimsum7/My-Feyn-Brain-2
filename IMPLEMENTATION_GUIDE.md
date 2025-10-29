@@ -35,10 +35,6 @@ const readTextFile = (file: File): Promise<string> => {
 
 ## Additional Libraries Needed
 
-### For PDF Files
-```bash
-npm install pdf-parse @types/pdf-parse
-```
 
 ### For DOCX Files
 ```bash
@@ -48,15 +44,13 @@ npm install mammoth
 ## Current Status
 
 - ✅ **TXT files**: Fully working with FileReader API
-- ⚠️ **PDF files**: Requires pdf-parse library installation
 - ⚠️ **DOCX files**: Requires mammoth library installation
 
 ## Next Steps
 
 1. **Test TXT files**: Upload a .txt file to see the real FileReader API in action
-2. **Install PDF support**: Run `npm install pdf-parse @types/pdf-parse`
-3. **Install DOCX support**: Run `npm install mammoth`
-4. **Uncomment real implementations** in the code where marked with TODO comments
+2. **Install DOCX support**: Run `npm install mammoth`
+3. **Uncomment real implementations** in the code where marked with TODO comments
 
 ## FileReader API Methods
 

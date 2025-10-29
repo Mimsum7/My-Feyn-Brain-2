@@ -9,6 +9,8 @@ interface RecordingInterfaceProps {
   fullTranscript: string;
   onStartListening: () => void;
   onStopListening: () => void;
+  showPassButton?: boolean;
+  onPass?: () => void;
 }
 
 export const RecordingInterface: React.FC<RecordingInterfaceProps> = ({
@@ -17,7 +19,9 @@ export const RecordingInterface: React.FC<RecordingInterfaceProps> = ({
   transcript,
   fullTranscript,
   onStartListening,
-  onStopListening
+  onStopListening,
+  showPassButton = false,
+  onPass
 }) => {
   const [showTranscript, setShowTranscript] = useState(false);
 
@@ -133,6 +137,18 @@ export const RecordingInterface: React.FC<RecordingInterfaceProps> = ({
               </p>
             )}
           </div>
+
+          {/* Pass Button */}
+          {showPassButton && onPass && (
+            <div className="mt-6">
+              <button
+                onClick={onPass}
+                className="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors duration-200 font-medium"
+              >
+                Pass Question
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
