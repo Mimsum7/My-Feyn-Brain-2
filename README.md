@@ -1,149 +1,144 @@
-# My Feyn Brain - AI-Powered Learning with the Feynman Technique
+MyFeynBrain
+AI-Powered Learning Using the Feynman Technique
 
-A modern web application that helps you master any subject using the Feynman technique, powered by AI for personalized feedback and guidance.
+MyFeynBrain is an interactive learning web application that helps you explain concepts aloud, get AI-generated feedback, answer dynamic follow-up questions, and receive an overall understanding score—all based on the Feynman Technique.
 
-## Features
+The system uses Groq for fast transcription and AI reasoning, and ElevenLabs for natural voice playback of AI-generated questions.
 
-- **Document Upload**: Support for DOCX and TXT files
-- **AI-Powered Analysis**: Automatic concept extraction and summary generation
-- **Voice Recording**: Real-time transcription of your explanations
-- **Intelligent Questioning**: AI-generated follow-up questions to deepen understanding
-- **Performance Analytics**: Detailed metrics on accuracy, completeness, and more
-- **Session History**: Track your learning progress over time
-- **Text-to-Speech**: AI voice reads questions aloud
+Features:
+Voice-Based Learning
+Real-time audio recording in the browser
+Groq Whisper-large-v3 Turbo transcription
+Accurate text extraction from your spoken explanation
 
-## Getting Started
+AI Understanding Evaluation:
+GPT-OSS-120B (Groq) evaluates your explanation
+AI scores your understanding
+Generates a breakdown of:
+Accuracy
+Completeness
+Clarity
+Confidence
+Missing concepts
 
-### Prerequisites
+Dynamic Follow-Up Questions
+AI creates context-aware follow-up questions based on what you actually said
+Spoken aloud using ElevenLabs TTS
+You respond by voice using the same recording button
 
-- Node.js 18+ 
-- npm or yarn
-- API keys for the following services:
-  - OpenAI (for AI analysis and question generation)
-  - AssemblyAI (for real-time speech transcription)
-  - ElevenLabs (for text-to-speech functionality)
+Session Summary
+Final evaluation after your explanation + answers
+Weighted scoring
+“Well understood / Almost there / Needs attention” tags
 
-### Installation
+Local Storage Persistence
+All sessions saved locally on your device
+No authentication or cloud database required
 
-1. Clone the repository:
-```bash
+Tech Stack
+Frontend
+React + TypeScript
+Vite
+TailwindCSS
+Framer Motion
+Lucide Icons
+
+AI Backend
+Groq (Transcription + GPT-OSS-120B reasoning)
+ElevenLabs (Text-to-speech)
+Node.js + Express server
+Multer for audio uploads
+
+Installation
+1️⃣ Clone the repository
 git clone <your-repo-url>
-cd my-feyn-brain
-```
+cd MyFeynBrain
 
-2. Install dependencies:
-```bash
+2️⃣ Install dependencies
 npm install
-```
 
-3. Set up environment variables:
-```bash
+3️⃣ Create your .env file
 cp .env.example .env
-```
 
-4. Edit the `.env` file and add your API keys:
-```env
-GROQ_API_KEY=your_groq_api_key_here
-VITE_GROQ_API_KEY=your_groq_api_key_here
-VITE_ELEVENLABS_API_KEY=your_elevenlabs_api_key_here
-VITE_ELEVENLABS_VOICE_ID=pNInz6obpgDQGcFmaJgB
-```
+4️⃣ Add your API keys
+# === GROQ AI (REQUIRED) ===
+GROQ_API_KEY=your_groq_key_here
 
-5. Install additional dependencies for file processing:
-```bash
-npm install mammoth
-```
+# === ELEVENLABS (REQUIRED) ===
+VITE_ELEVENLABS_API_KEY=your_elevenlabs_key_here
+VITE_ELEVENLABS_VOICE_ID=your_voice_id_here
 
-### API Integration Setup
+TTS Model (must be free-tier compatible)
+VITE_ELEVENLABS_MODEL=eleven_flash_v2
 
-The application currently uses mock APIs for development. To integrate with real APIs:
 
-#### 1. OpenAI Integration
-- Replace mock calls in `src/utils/mockApis.ts`
-- Implement real OpenAI API calls for:
-  - Concept summary generation
-  - Explanation evaluation
-  - Follow-up question generation
+⚠️ Note: Free ElevenLabs accounts cannot use eleven_monolingual_v1.
+Use: eleven_flash_v2 or any other free-tier listed model.
 
-#### 2. AssemblyAI Integration
-- Replace mock transcription in `src/utils/mockApis.ts`
-- Implement real-time WebSocket transcription
-- Set up microphone access and audio streaming
-
-#### 3. ElevenLabs Integration
-- Replace mock text-to-speech in `src/utils/mockApis.ts`
-- Implement real audio generation and playback
-
-#### 4. File Processing
-- Replace mock file processing in `src/components/Upload/DocumentUpload.tsx`
-- Implement real DOCX and TXT parsing
-
-### Development
-
-Start the development server:
-```bash
+5️⃣ Start the frontend
 npm run dev
-```
 
-The application will be available at `http://localhost:5173`
+6️⃣ Start the backend server
+node server.js
 
-### Building for Production
 
-```bash
-npm run build
-```
+App runs at:
 
-## API Keys Setup
+Frontend: http://localhost:5173
+Backend:  http://localhost:5000
 
-### OpenAI API
-1. Visit [OpenAI API](https://platform.openai.com/api-keys)
-2. Create a new API key
-3. Add it to your `.env` file as `VITE_OPENAI_API_KEY`
+Security & Storage
+Why the app has no authentication
+This is a local-first educational tool
+No user accounts or cloud sync needed
+Reduces complexity and cost
+Avoids storing sensitive audio or personal data on servers
 
-### AssemblyAI API
-1. Visit [AssemblyAI](https://www.assemblyai.com/)
-2. Sign up and get your API key
-3. Add it to your `.env` file as `VITE_ASSEMBLYAI_API_KEY`
+Where data is stored
+Type of Data	Storage Method	Location
+Session summaries	Browser LocalStorage	On your device
+Audio recordings	Temporary server files during upload	Deleted after transcription
+Study history	Browser LocalStorage	On your device
 
-### ElevenLabs API
-1. Visit [ElevenLabs](https://elevenlabs.io/)
-2. Sign up and get your API key
-3. Add it to your `.env` file as `VITE_ELEVENLABS_API_KEY`
-4. Optionally, choose a voice ID and add it as `VITE_ELEVENLABS_VOICE_ID`
+Security Measures
+API keys are loaded server-side (never exposed to browser)
+CORS restricted to local development origin
+Audio uploads validated + restricted to safe formats
+Temporary audio files auto-renamed and never publicly served
 
-## File Structure
-
-```
+Project Structure
 src/
 ├── components/
-│   ├── Analytics/          # Analytics dashboard and charts
-│   ├── History/           # Session history and management
-│   ├── Layout/            # Sidebar and layout components
-│   ├── Study/             # Core study session components
-│   └── Upload/            # Document upload functionality
-├── types/                 # TypeScript type definitions
+│   ├── Study/               # Recording, questions, evaluation UI
+│   ├── Analytics/           # Result visualization
+│   ├── History/             # Session history UI
+│   ├── Upload/              # Document upload (future)
+│   └── Layout/              # Sidebar, layout, navigation
+│
 ├── utils/
-│   ├── localStorage.ts    # Local storage management
-│   └── mockApis.ts       # Mock API implementations (replace with real APIs)
-└── App.tsx               # Main application component
-```
+│   ├── localStorage.ts      # Persistent session storage
+│   ├── elevenLabsApi.ts     # TTS integration
+│   └── groqApi.ts           # Transcription + GPT-OSS calls
+│
+└── server.js                # Node backend for audio + AI
 
-## Technologies Used
+API Usage Summary
+🟦 Groq API
+Used for:
+Speech-to-text transcription (whisper-large-v3-turbo)
+GPT-OSS-120B evaluation + reasoning
+Dynamic question generation
 
-- **React 18** with TypeScript
-- **Tailwind CSS** for styling
-- **Framer Motion** for animations
-- **Lucide React** for icons
-- **Vite** for build tooling
+🟪 ElevenLabs API
+Used for:
+TTS playback of AI questions
+Uses free-tier models (e.g., eleven_flash_v2)
 
-## Contributing
+Development
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+Run Vite dev server:
+npm run dev
 
-## License
 
-This project is licensed under the MIT License.
+Run backend server:
+node server.js
